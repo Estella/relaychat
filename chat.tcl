@@ -196,7 +196,7 @@ proc uputs {sock text} {
 		}
 		MOD {
 			if { [nick2id [lindex $linex 2]] eq 0 } return
-			if { $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)] || [info exists ::mods($sock)]} {
+			if { $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)] || [info exists ::opers($sock)]} {
 				sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src MOD [string tolower [lindex $linex 1]] [lindex $linex 2]"
 		lappend ::cmods([string tolower [lindex $linex 1]]) [nick2id [lindex $linex 2]]
 			} else {
