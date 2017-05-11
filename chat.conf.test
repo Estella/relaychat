@@ -1,0 +1,10 @@
+# __ THIS IS A TEST FILE TO TEST MULTIPLE SERVERS LINKED TOGETHER __
+# __ THIS IS NOT A REGULAR SAMPLE FILE AND CONTAINS MINIMAL OPTIONS __
+# Server Name
+name=testing.localhost
+# Listen on these ports
+ports=7656
+motd=chat.motd
+connects=localhost 7654
+mods=ronsor password
+
