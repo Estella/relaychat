@@ -132,14 +132,17 @@ proc handleout {cs} {
 		/msg {
 			puts $cs "MESSAGE [lindex $dat 1] :[lindex $dat 2]"
 		}
+		/modlogin {
+			puts $cs "MODLOGIN [lindex $dat 1] [lindex $dat 2]"
+		}
 		/help {
-			out status "Commands: /whois, /mod, /msg, /list, /kick, /demod, /join, /part, /lwin, /win"
+			out status "Commands: /whois, /mod, /msg, /list, /kick, /demod, /join, /part, /lwin, /win, /modlogin"
 		}
 
 	}
 	} else {
 	if { $::curwin ne "status" } {
-		puts $cs "MESSAGE $::curwin :$dat"
+		puts $cs "MESSAGE [lindex [split $::curwin "@"] 0] :$dat"
 	}
 	}
 }
