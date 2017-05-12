@@ -138,8 +138,8 @@ proc uputs {sock text} {
 
 	switch -nocase [lindex $linex 0] {
 		SERVER {
-			puts $rsock "[gettok] * NICK $::me"
-			puts $rsock "[gettok] * BURST"
+			puts $rsock "NICK $::me"
+			puts $rsock "BURST"
 			set ::servers($sock) $sock
 		}
 		REHASH {
