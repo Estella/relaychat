@@ -33,11 +33,22 @@ _LoadConf
  }
 proc uputs {sock text} {
 	if { ! [info exists ::issock($sock)] } {
-		sendToAllServer "$text"
+		puts $::realsocks($sock) "$text"
 	} else {
 		puts $sock $text
 	}
 }
+ proc forcepong {} {
+	foreach sock [array names ::issock] {
+		if { ([clock seconds] - $::lastpong($sock)) > 10 } {
+			puts $sock "[gettok] $::me PING"
+		}
+		if { ([clock seconds] - $::lastpong($sock)) > 30 } {
+			disconnect $sock {Ping timeout (40 seconds)}
+		}
+	}
+	after 1000 forcepong
+ }
  proc connect {sock host port {isserver 0}} {
     fconfigure $sock -blocking 0 -buffering line
     fileevent $sock readable [list handleSocket $sock]
@@ -45,18 +56,25 @@ proc uputs {sock text} {
     set ::chans($sock) {}
     set ::issock($sock) 1
     set ::hosts($sock) $host
+    set ::lastpong($sock) [clock seconds]
+    if { $host in $::conf(deny) } {
+	puts $sock "[gettok] $::me INFO :relaychat-1.1 5/12/2017 You're banned from the Relay Chat Network!"
+	disconnect $sock "You're banned"
+	return
+	}
     if { $isserver eq 1 } {
 	puts $sock "[gettok] * SERVER"
 	puts $sock "[gettok] * BURST"
 	puts $sock "[gettok] * NICK $::me"
     }
-    puts $sock "[gettok] $::me INFO :relaychat-1.0 Welcome to the Relay Chat Network!"
+    puts $sock "[gettok] $::me INFO :relaychat-1.1 5/12/2017 Welcome to the Relay Chat Network!"
     set f [open $::motd]
     while { ![eof $f] } {
 	puts $sock "[gettok] $::me MOTD :[gets $f]"
     }
     close $f
     puts $sock "[gettok] $::me INFO :You are now known as $sock"
+    puts $sock "[gettok] $::me INFO :I have [llength [array names ::socks]] users on [llength [array names ::servers]] servers, [llength [array names ::issock]] local users."
     sendToAllServer "[gettok] $::me FAKENICK fake$sock[clock clicks] $sock $host"
 }
 
@@ -75,12 +93,17 @@ proc uputs {sock text} {
 	close $sock
     } else {
     sendToAllServer "[gettok] $::me KILL $nick :[join $args]"
+	unset ::realsocks($sock)
    }
 	
     #sendText "* $nick has left the chat: [join $args]"
  }
  proc handleSocket {sock} {
  catch {
+    if { [chan pending input $sock] > 65536 } {
+	disconnect $sock {Protocol violation (LINE_LENGTH > 65536)}
+	return
+    }
     gets $sock line
     set rsock $sock
     if {[eof $sock]} {
@@ -114,9 +137,14 @@ proc uputs {sock text} {
 
 	switch -nocase [lindex $linex 0] {
 		SERVER {
-			puts $rsock "NICK $::me"
-			puts $rsock "BURST"
+			puts $rsock "[gettok] * NICK $::me"
+			puts $rsock "[gettok] * BURST"
 			set ::servers($sock) $sock
+		}
+		REHASH {
+			if { [info exists ::opers($sock)] } {
+				_LoadConf
+			}
 		}
 		BURST {
 			set ::servers($sock) $sock
@@ -132,17 +160,24 @@ proc uputs {sock text} {
 				puts $rsock "[gettok] $::me MOD $c $::socks($l)"
 				}
 				puts $rsock "[gettok] $::me TOPIC $c :$::topics($c)"
+				puts $rsock "[gettok] $::me FLAGS $c + $::cflags($c)"
 			}
 		}
 		LIST {
 			foreach {c} [array names ::topics] {
+				if { "private" ni $::cflags($c) } {
 				puts $rsock "[gettok] $::me LIST $c"
+				}
 			}
 		}
 		FAKENICK {
+			if { [nick2id [lindex $linex 2]] ne 0 } {
+			sendToAllServer "[gettok] $::me KILL $src :Nick collision"
+			}
 			set ::socks([lindex $linex 1]) [lindex $linex 2]
 			set ::chans([lindex $linex 1]) {}
 			set ::hosts([lindex $linex 1]) [lindex $linex 3]
+			set ::realsocks([lindex $linex 1]) $rsock
 			sendToAllServer "$thetok $src FAKENICK [lindex $linex 1] [lindex $linex 2] [lindex $linex 3]"
 		}
 		GLOBAL {
@@ -162,30 +197,45 @@ proc uputs {sock text} {
 			disconnect [nick2id [lindex $linex 1]] [lindex $linex 2]
 			}
 		}
+		
 		JOIN {
+		
+			if { [string tolower [lindex $linex 1]] in $::conf(deny) } {
+			puts $rsock "[gettok] $::me ERROR :This channel is not allowed to operate."
+			return
+			}
 			if { ! [info exists ::topics([string tolower [lindex $linex 1]]) ] } {
 				set ::topics([string tolower [lindex $linex 1]]) "No Topic Set"
 				set ::cmods([string tolower [lindex $linex 1]]) $sock
+				set ::cbans([string tolower [lindex $linex 1]]) {}
+				set ::cflags([string tolower [lindex $linex 1]]) {}
+			}
+			if { $::socks($sock) in $::cbans([string tolower [lindex $linex 1]]) || $::hosts($sock) in $::cbans([string tolower [lindex $linex 1]]) } {
+			puts $rsock "[gettok] $::me ERROR :You're banned from this channel"
+			return 
 			}
 			lappend ::chans($sock) [string tolower [lindex $linex 1]]
 			sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src JOIN [string tolower [lindex $linex 1]]"
-			puts $rsock "[gettok] $::me TOPIC [string tolower [lindex $linex 1]] :$::topics([string tolower [lindex $linex 1]])"
+			if { ! [info exists ::servers($rsock)] } { puts $rsock "[gettok] $::me TOPIC [string tolower [lindex $linex 1]] :$::topics([string tolower [lindex $linex 1]])" }
 		}
 		TOPIC {
 			if { [lindex $linex 2] eq "" } {
 			puts $rsock "[gettok] $::me TOPIC [string tolower [lindex $linex 1]] :$::topics([string tolower [lindex $linex 1]])"
 			}
-			if { ($sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]) && [lindex $linex 2] ne "" } {
+			if { ($sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]) && [lindex $linex 2] ne "" || "anytopic" in $::cflags([string tolower [lindex $linex 1]])} {
 			set ::topics([string tolower [lindex $linex 1]]) [lindex $linex 2]
-			sendTextToChan "$thetok $src TOPIC [string tolower [lindex $linex 1]] :[lindex $linex 2]"
+			sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src TOPIC [string tolower [lindex $linex 1]] :[lindex $linex 2]"
 			}
 		}
 		PART {
 			sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src PART [string tolower [lindex $linex 1]]"
 			set ::chans($sock) [lsearch -all -not -exact -inline $::chans($sock) [string tolower [lindex $linex 1]]]
+			if { [cusers [string tolower [lindex $linex 1]]] == 0 } {
+				unset ::topics([string tolower [lindex $linex 1]])
+			}
 		}
 		KICK {
-			if { [nick2id [lindex $linex 2]] eq 0 } return
+			if { [nick2id [lindex $linex 2]] eq 0 || [string tolower [lindex $linex 2]] eq [string tolower $::socks($sock)] } return
 			if { $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]} {
 		sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src KICK [string tolower [lindex $linex 1]] [lindex $linex 2]"
 			set ::chans([nick2id [lindex $linex 2]]) [lsearch -all -not -exact -inline $::chans([nick2id [lindex $linex 2]]) [string tolower [lindex $linex 1]]]
@@ -193,6 +243,28 @@ proc uputs {sock text} {
 				puts $rsock "$thetok $::me ERROR :You don't have permission to do that"
 			}
 
+		}
+		BAN {
+			if { !( $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)] || [info exists ::opers($sock)])} { puts $rsock "$thetok $::me ERROR :You can't do that!"; return }
+			sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src BAN [string tolower [lindex $linex 1]] [lindex $linex 2]"
+			lappend ::cbans([string tolower [lindex $linex 1]]) [lindex $linex 2]
+		}
+		UNBAN {
+			if { !($sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)] || [info exists ::opers($sock)])} { puts $rsock "$thetok $::me ERROR :You can't do that!"; return }
+			sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src UNBAN [string tolower [lindex $linex 1]] [lindex $linex 2]"
+
+			set ::cbans([string tolower [lindex $linex 1]]) [lsearch -not -all -exact -inline $::cbans([string tolower [lindex $linex 1]]) [lindex $linex 2]]
+		}
+		BANS {
+			foreach b $::cbans([string tolower [lindex $linex 1]]) {
+				puts $rsock "$thetok $::me BAN [string tolower [lindex $linex 1]] $b"
+			}
+		}
+		PING {
+			puts $rsock "$thetok $::me PONG"
+		}
+		PONG {
+			set ::lastpong($rsock) [clock seconds]
 		}
 		MOD {
 			if { [nick2id [lindex $linex 2]] eq 0 } return
@@ -213,7 +285,31 @@ proc uputs {sock text} {
 				puts $rsock "$thetok $::me ERROR :You don't have permission to do that"
 			}
 		}
+		FLAGS {
+			if { [lindex $linex 2] eq "" || [lindex $linex 3] eq "" } {
+				puts $rsock "[gettok] $::me FLAGS [string tolower [lindex $linex 1]] + $::cflags([string tolower [lindex $linex 1]])"
+				return
+			} else if { $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]} {
+				if { [lindex $linex 2] eq "-" } {
+					sendTextToChan [string tolower [lindex $linex 1]] "$thetok $::me FLAGS [string tolower [lindex $linex 1]] - [join [lrange $linex 3 end]]"
+					foreach c [lrange $linex 3 end] {
+						set ::cflags([string tolower [lindex $linex 1]]) [lsearch -inline -all -not -exact $::cflags([string tolower [lindex $linex 1]]) $c]
+					}
+				} else {
+					sendTextToChan [string tolower [lindex $linex 1]] "$thetok $::me FLAGS [string tolower [lindex $linex 1]] + [join [lrange $linex 3 end]]"
+				foreach c [lrange $linex 3 end] {
+					lappend ::cflags([string tolower [lindex $linex 1]]) [string tolower $c]
+				}
+				}
+			} else {
+				puts $rsock "[gettok] $::me ERROR :You don't have permission to modify channel flags"
+			}
+		}
 		NICK {
+			if { [lsearch -nocase $::conf(deny) [lindex $linex 1]] != -1 } {
+				disconnect $sock "You're banned (Nickname)"
+				return
+			}
 			if { [lsearch -nocase [array get ::socks] [lindex $linex 1]] != -1 } {
 				puts $rsock "$thetok $::me ERROR :Nickname in use"
 			} else {
@@ -259,6 +355,15 @@ proc uputs {sock text} {
 			}
 
 		}
+		ENCAP {
+			if { [nick2id [lindex $linex 1]] eq 0 } {
+			sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src ENCAP [string tolower [lindex $linex 1]] :[lindex $linex 2]" $sock
+			} else {
+			uputs [nick2id [lindex $linex 1]] "$thetok $src ENCAP [string tolower [lindex $linex 1]] :[lindex $linex 2]"
+			}
+
+		}
+		
 	}
 #        sendText "$::socks($sock): $line"
 }
@@ -317,4 +422,16 @@ foreach {host port} $::conf(connects) {
 	}
 
 }
+proc cusers {chan} {
+	set users {}
+    foreach s [array names ::chans] {
+        if { [string tolower $chan] in $::chans($s) } {
+	set c ""
+	if { $s in $::cmods([string tolower $chan]) } { set c "*" }
+           lappend users $c$::socks($s)
+        }
+    }
+	return [llength $users]
+}
+ after 1000 forcepong
  vwait forever

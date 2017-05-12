@@ -16,6 +16,7 @@ proc notify {tgtwin text} {
 	}
 }
 set ::curwin status
+proc null {} {}
 proc handlein {cs} {
 set line [gets $cs]
 set linexx [list {*}[split [lindex [split [string map {" :" ^} $line] "^"] 0] " "] [join [lrange [split [string map {" :" ^} $line] "^"] 1 end] " :"]]
@@ -40,6 +41,9 @@ switch -nocase -regexp -- [lindex $linexx 2] {
 	(MOTD|INFO) {
 	out status "<server> [lindex $linexx 3]"
 	}
+	PING {
+	puts $cs "PONG"
+	}
 	NICK {
 	outall "-- [lindex $linexx 1] is now known as [lindex $linexx 3] --"
 	}
@@ -62,7 +66,13 @@ switch -nocase -regexp -- [lindex $linexx 2] {
 	out [lindex $linexx 3] "-- the topic for [lindex $linexx 3] is: [lindex $linexx 4] (set by [lindex $linexx 1]) --"
 	}
 	default {
-	out status "-- [join [lrange $linexx 1 end]] --"
+	out status "** [join [lrange $linexx 1 end]]"
+	}
+	ENCAP {
+		null
+	}
+	ABOUT {
+	out $::curwin "user: [lindex $linexx 3]@[lindex $linexx 4]"
 	}
 }
 }
@@ -112,7 +122,7 @@ proc handleout {cs} {
 			puts $cs "USERS [orc [lindex $dat 1] $::curwin]"
 		}
 		/topic {
-			puts $cs "TOPIC [lindex $dat 1] :[lindex $dat 2]"
+			puts $cs "TOPIC [lindex $dat 1] :[join [lrange $dat 2 end]]"
 		}
 		/demod {
 			puts $cs "DEMOD [lindex $dat 1] [lindex $dat 2]"
@@ -121,7 +131,7 @@ proc handleout {cs} {
 			puts $cs "MOD [lindex $dat 1] [lindex $dat 2]"
 		}
 		/kick {
-			puts $cs "TOPIC [lindex $dat 1] [lindex $dat 2]"
+			puts $cs "KICK [lindex $dat 1] [lindex $dat 2]"
 		}
 		/whois {
 			puts $cs "WHOIS [lindex $dat 1]"
@@ -130,13 +140,22 @@ proc handleout {cs} {
 			puts $cs "NICK [lindex $dat 1]"
 		}
 		/msg {
-			puts $cs "MESSAGE [lindex $dat 1] :[lindex $dat 2]"
+			puts $cs "MESSAGE [lindex $dat 1] :[join [lrange $dat 2 end]]"
 		}
 		/modlogin {
 			puts $cs "MODLOGIN [lindex $dat 1] [lindex $dat 2]"
 		}
+		/flags {
+			puts $cs "FLAGS [lindex $dat 1] [lindex $dat 2] [join [lrange $dat 3 end]]"
+		}
+		/ban {
+			puts $cs "BAN [lindex $dat 1] [lindex $dat 2]"
+		}
+		/unban {
+			puts $cs "UNBAN [lindex $dat 1] [lindex $dat 2]"
+		}
 		/help {
-			out status "Commands: /whois, /mod, /msg, /list, /kick, /demod, /join, /part, /lwin, /win, /modlogin"
+			out status "Commands: /whois, /mod, /msg, /list, /kick, /demod, /join, /part, /lwin, /win, /modlogin, /help, /ban, /bans, /unban, /flags"
 		}
 
 	}
