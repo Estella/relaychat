@@ -42,6 +42,7 @@ proc uputs {sock text} {
 	foreach sock [array names ::issock] {
 		if { ([clock seconds] - $::lastpong($sock)) > 10 } {
 			puts $sock "[gettok] $::me PING"
+			puts $sock "PING"
 		}
 		if { ([clock seconds] - $::lastpong($sock)) > 30 } {
 			disconnect $sock {Ping timeout (40 seconds)}
