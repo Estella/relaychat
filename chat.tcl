@@ -264,7 +264,7 @@ proc uputs {sock text} {
 			}
 		}
 		PING {
-			puts $rsock "$thetok $::me PONG"
+			puts $rsock "PONG"
 		}
 		PONG {
 			set ::lastpong($rsock) [clock seconds]
