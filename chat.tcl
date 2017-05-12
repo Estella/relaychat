@@ -63,9 +63,9 @@ proc uputs {sock text} {
 	return
 	}
     if { $isserver eq 1 } {
-	puts $sock "[gettok] * SERVER"
-	puts $sock "[gettok] * BURST"
-	puts $sock "[gettok] * NICK $::me"
+	puts $sock "NICK $::me"
+	puts $sock "SERVER"
+	puts $sock "BURST"
     }
     puts $sock "[gettok] $::me INFO :relaychat-1.1 5/12/2017 Welcome to the Relay Chat Network!"
     set f [open $::motd]
