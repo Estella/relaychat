@@ -161,6 +161,9 @@ proc uputs {sock text} {
 				}
 				puts $rsock "[gettok] $::me TOPIC $c :$::topics($c)"
 				puts $rsock "[gettok] $::me FLAGS $c + $::cflags($c)"
+				foreach b $::cbans($c) {
+				puts $rsock "[gettok] $::me BAN $c $b"
+				}
 			}
 		}
 		LIST {
