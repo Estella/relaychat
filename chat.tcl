@@ -175,7 +175,7 @@ proc uputs {sock text} {
 			}
 		}
 		FAKENICK {
-			if { [nick2id [lindex $linex 2]] ne 0 } {
+			if { [nick2id [lindex $linex 2]] ne 0 && (![string match "*.*" [lindex $linex 2]])} {
 			sendToAllServer "[gettok] $::me KILL $src :Nick collision"
 			}
 			set ::socks([lindex $linex 1]) [lindex $linex 2]

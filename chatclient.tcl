@@ -26,8 +26,8 @@ switch -nocase -regexp -- [lindex $linexx 2] {
 	}
 	MESSAGE {
 	set pcx [lindex $linexx 1]
-	if { [string index $pcx 0] eq "#" } {
-		set pcx [linex $linexx 3]
+	if { [string index [lindex $linexx 3] 0] eq "#" } {
+		set pcx [lindex $linexx 3]
 	}
 	out $pcx "([lindex $linexx 1]) [join [lrange $linexx 4 end]]"
 	notify $pcx "You have a message from [lindex $linexx 1]"
