@@ -59,16 +59,16 @@ proc uputs {sock text} {
     set ::hosts($sock) $host
     set ::lastpong($sock) [clock seconds]
     if { $host in $::conf(deny) } {
-	puts $sock "[gettok] $::me INFO :relaychat-1.1 5/12/2017 You're banned from the Relay Chat Network!"
+	puts $sock "[gettok] $::me INFO :relaychat-1.1 You're banned from the Relay Chat Network!"
 	disconnect $sock "You're banned"
 	return
 	}
     if { $isserver eq 1 } {
-	puts $sock "NICK $::me"
-	puts $sock "SERVER"
-	puts $sock "BURST"
+	puts $sock "[gettok] * NICK $::me"
+	puts $sock "[gettok] * SERVER"
+	puts $sock "[gettok] * BURST"
     }
-    puts $sock "[gettok] $::me INFO :relaychat-1.1 5/12/2017 Welcome to the Relay Chat Network!"
+    puts $sock "[gettok] $::me INFO :relaychat-1.1 Welcome to the Relay Chat Network!"
     set f [open $::motd]
     while { ![eof $f] } {
 	puts $sock "[gettok] $::me MOTD :[gets $f]"
@@ -113,16 +113,19 @@ proc uputs {sock text} {
     }
     if {$line eq ""} return
     set linexx [list {*}[split [lindex [split [string map {" :" ^} $line] "^"] 0] " "] [join [lrange [split [string map {" :" ^} $line] "^"] 1 end] " :"]]
+
+
 	if { [string index $line 0] == "#" } {
 		set thetok [lindex $linexx 0]
 		if { $thetok in $::usedtoks } return
 		lappend ::usedtoks $thetok
+	    puts "$sock: $line"
 		set src [lindex $linexx 1]
-		if { $src eq "*" } { set src $rsock }
+		if { $src eq "*" } { set src $::socks($rsock) }
 		if { [nick2id [lindex [split $src "@"] 0]] eq 0 } {
 		#puts $sock "[gettok] $::me WARNING :Your connection could be closed due to a protocol violation [!]"
 		if { [info exists ::servers($sock)] }  {
-		#disconnect $sock "Protocol violation: user does not exist (Bug?): $src"
+		disconnect $sock "Protocol violation: user does not exist (Bug?): $src"
 		} else {
 		return
 		}
@@ -131,15 +134,15 @@ proc uputs {sock text} {
 		set linex [lrange $linexx 2 end]
 	} else {
 		set thetok [gettok]
+	    puts "$sock: $line"
 		set src "$::socks($sock)@$::hosts($sock)"
 		set linex $linexx
 	}
-	    puts "$sock: $line"
 
 	switch -nocase [lindex $linex 0] {
 		SERVER {
-			puts $rsock "NICK $::me"
-			puts $rsock "BURST"
+			puts $rsock "[gettok] * NICK $::me"
+			puts $rsock "[gettok] * BURST"
 			set ::servers($sock) $sock
 		}
 		REHASH {
@@ -151,7 +154,7 @@ proc uputs {sock text} {
 			set ::servers($sock) $sock
 			puts "$::socks($sock) is now a server"
 			foreach {k v} [array get ::socks] {
-				puts $rsock "[gettok] $::me FAKENICK fake$k[clock clicks] $v $::hosts($k)"
+				puts $rsock "[gettok] $::me FAKENICK $::me-$k $v $::hosts($k)"
 				foreach c $::chans($k) {
 				puts $rsock "[gettok] $v JOIN $c"
 				}
