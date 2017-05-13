@@ -212,7 +212,7 @@ proc uputs {sock text} {
 		}
 		
 		JOIN {
-			puts "a join"
+			if { [string tolower [lindex $linex 1]] in $::chans($sock) } return
 			if { [string tolower [lindex $linex 1]] in $::conf(deny) } {
 			puts $rsock "[gettok] $::me ERROR :This channel is not allowed to operate."
 			return
