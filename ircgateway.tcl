@@ -17,7 +17,7 @@ proc proxyfromserver {server client host port thenick} {
 			if { [string match "*relaychat-1.1*" $dat] } {
 				puts $client ":[lindex $data 1] 001 $thenick :Welcome to the relay chat network"
 				puts $client ":[lindex $data 1] 004 $thenick :I'm running version relaychat-1.1"
-				puts $client ":[lindex $data 1] 005 $thenick PREFIX=(ov)@+ CHANLIMIT=NONE COMPLIANT=FALSE"
+				puts $client ":[lindex $data 1] 005 $thenick PREFIX=(ov)@+ CHANLIMIT=NONE CHANTYPES=# COMPLIANT=FALSE"
 				puts $client ":[lindex $data 1] 375 $thenick :[lindex $data 1] message of the day!"
 				return
 			}
@@ -175,6 +175,9 @@ proc proxyfromclient {client server host port} {
 		}
 		PING {
 			puts $client ":$::me PONG :[lindex $data 2]"
+		}
+		CONNECT {
+			puts $server "CONNECT [lindex $data 1] [lindex $data 2]"
 		}
 		QUIT {
 			puts $server "QUIT :[lindex $data 2]"
