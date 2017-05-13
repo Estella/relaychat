@@ -98,6 +98,10 @@ proc uputs {sock text} {
 	
     #sendText "* $nick has left the chat: [join $args]"
  }
+ # parseline really sucks like what does this even mean anymore
+ proc parseline {line} {
+    return [list {*}[split [lindex [split [string map {" :" ^} $line] "^"] 0] " "] [join [lrange [split [string map {" :" ^} $line] "^"] 1 end] " :"]]
+ }
  proc handleSocket {sock} {
  catch {
     if { [chan pending input $sock] > 65536 } {
@@ -175,6 +179,9 @@ proc uputs {sock text} {
 				puts $rsock "[gettok] $::me LIST $c"
 				}
 			}
+		}
+		SETHOST {
+			set ::hosts($sock) [lindex $linex 1]
 		}
 		FAKENICK {
 			if { [nick2id [lindex $linex 2]] ne 0 && (![string match "*.*" [lindex $linex 2]])} {
@@ -438,6 +445,9 @@ proc cusers {chan} {
         }
     }
 	return [llength $users]
+}
+foreach t $::conf(modules) {
+	source $t
 }
  after 1000 forcepong
  vwait forever
