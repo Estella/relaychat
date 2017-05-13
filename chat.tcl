@@ -74,7 +74,9 @@ proc uputs {sock text} {
     }
     close $f
     puts $sock "[gettok] $::me INFO :You are now known as $sock"
-    puts $sock "[gettok] $::me INFO :I have [llength [array names ::socks]] users on [expr [llength [array names ::servers]]+1] servers, [llength [array names ::issock]] local users."
+#    puts $sock "[gettok] $::me INFO :I have [llength [array names ::socks]] users on [expr [llength [array names ::servers]]+1] servers, [llength [array names ::issock]] local users."
+   puts $sock "[gettok] $::me INFO :There are [llength [array names ::socks]] users and 0 invisible on [expr [llength [array names ::servers]]+1] servers and I have [llength [array names ::issock]] local users."
+
     sendToAllServer "[gettok] $::me FAKENICK fake$sock[clock clicks] $sock $host"
 }
 
@@ -171,7 +173,7 @@ proc uputs {sock text} {
 			}
 		}
 		LUSERS {
-		    puts $sock "[gettok] $::me INFO :I have [llength [array names ::socks]] users on [expr [llength [array names ::servers]]+1] servers, [llength [array names ::issock]] local users."
+		    puts $sock "[gettok] $::me INFO :There are [llength [array names ::socks]] users and 0 invisible on [expr [llength [array names ::servers]]+1] servers and I have [llength [array names ::issock]] local users."
 		}
 		BURST {
 			set ::servers($sock) $sock
@@ -202,7 +204,13 @@ proc uputs {sock text} {
 		}
 		SETHOST {
 			set ::hosts($sock) [lindex $linex 1]
-		}
+			set host $::hosts($sock)
+		    if { $host in $::conf(deny) } {
+	puts $sock "[gettok] $::me INFO :relaychat-1.1 You're banned from the Relay Chat Network!"
+	disconnect $sock "You're banned"
+	return
+	}
+			}
 		FAKENICK {
 			if { [nick2id [lindex $linex 2]] ne 0 && (![string match "*.*" [lindex $linex 2]])} {
 			sendToAllServer "[gettok] $::me KILL $src :Nick collision"

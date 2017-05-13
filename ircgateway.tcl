@@ -6,7 +6,7 @@ proc hostmask {nick} {
 	if { [string match "*.*" $nick] } { return $nick }
 	return "${nick}!${nick}@[gethost $nick]"
 }
-proc proxyfromserver {server client host port thenick} {
+proc proxyfromserver {server client host port thenick oldnick} {
 	gets $server dat
 	if { [eof $server] || [eof $client] } { close $server; close $client }
 	if { $dat eq "" } return
@@ -23,7 +23,7 @@ proc proxyfromserver {server client host port thenick} {
 			}
 			if { [string match "*have*" $dat] } {
 				puts $client ":[lindex $data 1] 376 $thenick :End of MOTD"
-				puts $client ":[lindex $data 1] NOTICE $thenick :[lindex $data 3]"
+				puts $client ":[lindex $data 1] 251 $thenick :[lindex $data 3]"
 			}
 		}
 		
@@ -77,7 +77,11 @@ proc proxyfromserver {server client host port thenick} {
 			if { [string match "Closing link*" [lindex $data 3]] } {
 			puts $client ":$::me ERROR $thenick :[lindex $data 3]"
 			} else {
+			if { [string match "*Nickname in use*" [lindex $data 3]] } {
 			puts $client ":$::me NOTICE $thenick :Error: [lindex $data 3]"
+			} else {
+			puts $client ":$::me 433 $thenick * :Nickname in use"
+			}
 			}
 		}
 		NICK {
@@ -105,7 +109,7 @@ proc proxyfromserver {server client host port thenick} {
 	}
 }
 
-proc proxyfromclient {client server host port} {
+proc proxyfromclient {client server host port {curnick "*"}} {
 	gets $client dat
 	if { [eof $client] || [eof $server] } { close $client; close $server }
 	if { $dat eq "" } return
@@ -115,7 +119,7 @@ proc proxyfromclient {client server host port} {
 		NICK {
 			puts $server "NICK [lindex $data 1]"
 			puts $server "SETHOST $host"
-			fileevent $server readable [list proxyfromserver $server $client $host $port [lindex $data 1]]
+			fileevent $server readable [list proxyfromserver $server $client $host $port [lindex $data 1] abc]
 		}
 		JOIN {
 			foreach c [split [lindex $data 1] ","] {
@@ -131,6 +135,9 @@ proc proxyfromclient {client server host port} {
 		}
 		WHOIS {
 			puts $server "WHOIS [lindex $data 1]"
+		}
+		LUSERS {
+			puts $server "LUSERS"
 		}
 		LIST {
 			puts $server "LIST"
