@@ -124,7 +124,7 @@ proc uputs {sock text} {
 		if { [nick2id [lindex [split $src "@"] 0]] eq 0 } {
 		#puts $sock "[gettok] $::me WARNING :Your connection could be closed due to a protocol violation [!]"
 		if { [info exists ::servers($sock)] }  {
-		disconnect $sock "Protocol violation: user does not exist (Bug?): $src (with line $line)"
+#		disconnect $sock "Protocol violation: user does not exist (Bug?): $src (with line $line)"
 		} else {
 		return
 		}
