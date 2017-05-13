@@ -86,6 +86,13 @@ proc uputs {sock text} {
     unset ::chans($sock)
     unset ::hosts($sock)
     catch { unset ::opers($sock) }
+    if { [info exists ::servers($sock)] } {
+	foreach {k v} [array get ::realsocks] {
+		if { $v eq $sock } {
+			disconnect $k "$nick $::me"
+		}
+	}
+    }
     if { [info exists ::issock($sock) ] } {
 	catch { unset ::servers($sock) }
     	unset ::issock($sock)
