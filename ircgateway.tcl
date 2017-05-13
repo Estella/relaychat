@@ -89,6 +89,9 @@ proc proxyfromserver {server client host port thenick} {
 		MOD {
 			puts $client ":[hostmask [lindex $data 1]] MODE [lindex $data 3] +o [lindex $data 4]"
 		}
+		SERVERS {
+			puts $client ":$::me 364 $thenick [lindex $data 3] [lindex $data 1] :1 A Remote Server"
+		}
 		DEMOD {
 			puts $client ":[hostmask [lindex $data 1]] MODE [lindex $data 3] -o [lindex $data 4]"
 		}
@@ -184,6 +187,18 @@ proc proxyfromclient {client server host port} {
 		}
 		PRIVMSG {
 			puts $server "MESSAGE [lindex $data 1] :[lindex $data 2]"
+		}
+		KILL {
+			puts $server "KILL [lindex $data 1] :[lindex $data 2]"
+		}
+		LINKS {
+			puts $server "SERVERS"
+		}
+		REHASH {
+			puts $server "REHASH"
+		}
+		RESTART {
+			puts $server "RESTART"
 		}
 	}
 }

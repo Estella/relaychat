@@ -74,7 +74,7 @@ proc uputs {sock text} {
     }
     close $f
     puts $sock "[gettok] $::me INFO :You are now known as $sock"
-    puts $sock "[gettok] $::me INFO :I have [llength [array names ::socks]] users on [llength [array names ::servers]] servers, [llength [array names ::issock]] local users."
+    puts $sock "[gettok] $::me INFO :I have [llength [array names ::socks]] users on [expr [llength [array names ::servers]]+1] servers, [llength [array names ::issock]] local users."
     sendToAllServer "[gettok] $::me FAKENICK fake$sock[clock clicks] $sock $host"
 }
 
@@ -159,6 +159,19 @@ proc uputs {sock text} {
 			if { [info exists ::opers($sock)] } {
 				_LoadConf
 			}
+		}
+		RESTART {
+			if { [info exists ::opers($sock)] } {
+				source [info script]
+			}
+		}
+		SERVERS {
+			foreach c [array names ::servers] {
+			puts $rsock "[gettok] $::me SERVERS $::socks($c)"
+			}
+		}
+		LUSERS {
+		    puts $sock "[gettok] $::me INFO :I have [llength [array names ::socks]] users on [expr [llength [array names ::servers]]+1] servers, [llength [array names ::issock]] local users."
 		}
 		BURST {
 			set ::servers($sock) $sock
