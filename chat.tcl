@@ -219,7 +219,10 @@ proc uputs {sock text} {
 			}
 			if { ! [info exists ::topics([string tolower [lindex $linex 1]]) ] } {
 				set ::topics([string tolower [lindex $linex 1]]) "No Topic Set"
+				set ::cmods([string tolower [lindex $linex 1]]) {}
+				if { ![info exists ::servers($rsock)] } {
 				set ::cmods([string tolower [lindex $linex 1]]) $sock
+				}
 				set ::cbans([string tolower [lindex $linex 1]]) {}
 				set ::cflags([string tolower [lindex $linex 1]]) {}
 			}
