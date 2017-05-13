@@ -1,0 +1,20 @@
+# Server Name
+name=your.server.name
+# Listen on these ports
+ports=7654 7655
+motd=chat.motd
+connects=os.openstar.pw 7654
+mods=name password name2 password2
+# Deny
+# deny=... is a bit complicated
+# it holds nicknames and IP addresses to deny access to the server to
+# entries are space-separated
+deny=badnick 127.0.0.2 bot123
+# Filter
+filter=
+# Modules
+# list of modules to use; space separated
+modules=ircgateway.tcl
+# Configure the IRC Gateway -- you probably want this
+ircgateway.ports=6667 6668
+
