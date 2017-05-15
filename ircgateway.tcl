@@ -77,7 +77,7 @@ proc proxyfromserver {server client host port thenick oldnick} {
 			if { [string match "Closing link*" [lindex $data 3]] } {
 			puts $client ":$::me ERROR $thenick :[lindex $data 3]"
 			} else {
-			if { [string match "*Nickname in use*" [lindex $data 3]] } {
+			if { ![string match "*Nickname in use*" [lindex $data 3]] } {
 			puts $client ":$::me NOTICE $thenick :Error: [lindex $data 3]"
 			} else {
 			puts $client ":$::me 433 $thenick * :Nickname in use"
