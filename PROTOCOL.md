@@ -69,3 +69,6 @@ The server that receives these messages should respond with:
 | JOIN | #[channel] | Join a channel; no ',' (commas) supported for multiple channels. |
 | MOD/DEMOD | #[channel] [user] | Grant or revoke moderator privileges to a user for a channel. |
 | TOPIC | #[channel] [:topic text] | Set the channel topic; only available for moderators. |
+| QUIT | [:message] | Disconnect a user; this is not sent to other servers in practice (KILL is used) but MUST work fine if done so. |
+| KILL | [target] [:message] | Forcibly disconnect a user or notify the rest of the network that a user on your server has disconnected. |
+| MESSAGE | [target] [:message] | Send a message to a target, which may be either a user's nickname or a #[channel name]. |
