@@ -1,1 +1,16 @@
-this stuff is pretty new; no docs yet
+This is pretty new.
+
+You need tcl to run this and optionally TLS for Tcl 1.6.7+ for TLS/SSL.
+
+Edit chat.conf and then run:
+
+   tclsh chat.tcl
+
+Currently, just use the IRC gateway or simple chat client:
+
+   Connect to localhost:6667 if you have the irc gateway enabled.
+
+   Use: tclsh chatclient.tcl localhost 7654 <desired nickname> if you want to use
+   the simple and quite awful chat client.
+
+Protocol docs are in PROTOCOL.md
