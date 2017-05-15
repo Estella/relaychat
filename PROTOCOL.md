@@ -66,3 +66,6 @@ The server that receives these messages should respond with:
 | SERVER | none | Enable server mode, the receiving server should always respond as documented in **Server to Server Interaction** |
 | BURST | none | Respond with a series of FAKENICK, JOIN, MOD, TOPIC and other relevant commands to get the connecting server up to date on network state |
 | FAKENICK | [uid]* [nick]** [hostname] | Introduce a remote user into the network; Kill any nicknames that collide with another user. *UID is used for internal purposes and is random. **nicknames can be server names too; if it a server you should not KILL it during a nick collision. |
+| JOIN | #[channel] | Join a channel; no ',' (commas) supported for multiple channels. |
+| MOD/DEMOD | #[channel] [user] | Grant or revoke moderator privileges to a user for a channel. |
+| TOPIC | #[channel] [:topic text] | Set the channel topic; only available for moderators. |
