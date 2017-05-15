@@ -21,11 +21,22 @@
 }
  # END CONFIG
 _LoadConf
+catch { package require tls }
+proc connect_tls {sock host port} {
+	catch { tls::import $sock -server 1 -keyfile $::conf(tls.key) -certfile $::conf(tls.cert) }
+	connect $sock $host $port
+}
  if {![info exists sock]} {
-    set sock 1
+catch {    set sock 1
     foreach p $::ports {
     set sock$p [socket -server connect $p]
     }
+}
+	catch {
+	foreach p $::conf(tls.ports) {
+	set sock$p [socket -server connect_tls $p]
+	}
+	}
  }
  set usedtoks {}
  proc gettok {} {
@@ -39,6 +50,10 @@ proc uputs {sock text} {
 	}
 }
  proc forcepong {} {
+	if { [info exists ::__reload__] } {
+				unset ::__reload__
+				uplevel #0 source [info script]
+	}
 	foreach sock [array names ::issock] {
 		catch { if { ([clock seconds] - $::lastpong($sock)) > 10 } {
 			puts $sock "[gettok] $::me PING"
@@ -50,7 +65,7 @@ proc uputs {sock text} {
 	after 5000 forcepong
  }
  proc connect {sock host port {isserver 0}} {
-    fconfigure $sock -blocking 0 -buffering line
+    fconfigure $sock -blocking 0 -buffering line -translation auto
     fileevent $sock readable [list handleSocket $sock]
     set ::socks($sock) $sock
     set ::chans($sock) {}
@@ -164,7 +179,7 @@ proc uputs {sock text} {
 		}
 		RESTART {
 			if { [info exists ::opers($sock)] } {
-				source [info script]
+				set ::__reload__ 1
 			}
 		}
 		SERVERS {

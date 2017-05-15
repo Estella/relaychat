@@ -17,4 +17,10 @@ filter=
 modules=ircgateway.tcl
 # Configure the IRC Gateway -- you probably want this
 ircgateway.ports=6667 6668
-
+# Configure TLS
+# Generate chat.(key|crt) using ./genkey.sh
+tls.key=chat.key
+tls.cert=chat.crt
+tls.ports=7657
+# IRC Gateway TLS Configuration
+tls.ircgateway.ports=6697

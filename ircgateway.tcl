@@ -32,7 +32,7 @@ proc proxyfromserver {server client host port thenick oldnick} {
 			puts $client ":$::me 366 $thenick [lindex $data 3] :End of /NAMES reply"
 		}
 		GLOBAL {
-			puts $client ":[lindex $data 1] NOTICE $thenick :Global Message: [lindex $data 3]"
+			puts $client ":[hostmask [lindex $data 1]] NOTICE $thenick :Global Message: [lindex $data 3]"
 		}
 		JOIN {
 			puts $client ":[lindex $data 1]![lindex $data 1]@[gethost [lindex $data 1]] JOIN [lindex $data 3]"
@@ -114,7 +114,7 @@ proc proxyfromclient {client server host port {curnick "*"}} {
 	if { [eof $client] || [eof $server] } { close $client; close $server }
 	if { $dat eq "" } return
 	set data [parseline $dat]
-	switch -- [lindex $data 0] {
+	switch -nocase -- [lindex $data 0] {
 		USER {}
 		NICK {
 			puts $server "NICK [lindex $data 1]"
@@ -217,7 +217,19 @@ proc ircproxy {sock host port} {
 	fileevent $sock readable [list proxyfromclient $sock $tgt $host $port]
 }
 foreach p $::conf(ircgateway.ports) {
-	socket -server ircproxy $p
+catch {	socket -server ircproxy $p }
 }
-
+proc ircproxy_tls {sock host port} {
+	tls::import $sock -server 1 -keyfile $::conf(tls.key) -certfile $::conf(tls.cert) 
+	tls::handshake $sock
+	puts -nonewline "NOTICE * :Ok\r\n"
+	ircproxy $sock $host $port
+}
+catch {
+	puts "TLS loading..."
+	foreach p $::conf(tls.ircgateway.ports) {
+	socket -server ircproxy_tls $p
+	}
+	puts "TLS failed"
+}
 puts "I've loaded the IRC Gateway Module"
