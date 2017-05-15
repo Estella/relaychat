@@ -76,4 +76,5 @@ The server that receives these messages should respond with:
 | PART | #[channel] | Leave a channel | `[message id] [user] PART #[channel]` |
 | WHOIS | [user] | Give nickname, local uid, and hostname of remote user | `[message id] [server] ABOUT [user nickname] [user local uid] [user hostname] :[optional informational message: e.g. "is my nickname, local uid, and hostname."]` |
 | MODLOGIN | [name] [password] | Obtain global moderator privileges | GLOBAL message detailing who gained privileges |
-| GLOBAL | [:message] | Send a global message | `[message id] [user or server] GLOBAL [:message]`
+| GLOBAL | [:message] | Send a global message | `[message id] [user or server] GLOBAL [:message]` |
+| KICK | #[channel] [target] | Kick a user from a channel. Moderators only. | `[message id] [user] KICK #[channel] [target]` |
