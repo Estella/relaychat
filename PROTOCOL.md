@@ -1,6 +1,9 @@
 Hello there! This is about the protocol of Ronsor Relay Chat System, Version 1.1+
 
 1. Client and Server Interactions and Protocol Standards.
+2. Server to Server Interactions
+3. Commands
+4. Conclusion
 
 ## Client and Server Interactions and Protocol Standards
 
@@ -34,4 +37,31 @@ Messages sent to a server should be in one of these three formats:
     -- or
     >> [message id] [source (either remote server or client)] [command] [param1 [param2 [...]] [:message (with spaces possible)]
 
+Clients should always use the first format.
+While negotiating server-to-server protocol mode, the second form should be used.
+After server-to-server protocol mode is activated, the last form should always be used.
 
+Any other syntax is INVALID and should be met with an ERROR. If it is on a server-to-server
+connection, you should disconnect the server with a PROTOCOL VIOLATION error.
+
+
+## Server to Server Interaction
+
+Connections from a client to a server are similar to server to server connection, however the connecting end should always begin with this:
+
+    >> [message id] * NICK [server name]
+    >> [message id] * SERVER
+    >> [message id] * BURST
+
+The server that receives these messages should respond with:
+
+    >> [message id] * NICK [receiving server name]
+    >> [message id] * BURST
+
+### Commands
+
+| Command | Parameters | Description |
+|---------|------------|-------------|
+| NICK | [desired nickname] | Set a nickname or server name |
+| SERVER | none | Enable server mode, the receiving server should always respond as documented in **Server to Server Interaction** |
+| BURST | none | Respond with a series of FAKENICK, JOIN, MOD, TOPIC and other relevant commands to get the connecting server up to date on network state |
