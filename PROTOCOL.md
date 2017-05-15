@@ -9,21 +9,18 @@ port that a Ronsor Relay Chat System compatible server is listening on.
 
 The standard port is 7654 and for TLS is 7657.
 
-<< = messages from Server
-
->> = messages from Client
-
-[message id] = unique id of the format #<random number>,<unix timestamp>. The
+| ~ | Definition |
+|---|------------|
+| << | messages from Server |
+| >> | messages from Client |
+| [message id] | unique id of the format #<random number>,<unix timestamp>. The
 <unix timestamp> must be a real timestamp or clients and/or servers may react
 unexpectedly. <random number> need not be especially random, in many cases
 the C clock() function or tcl [clock clicks] function will provide a number
-good enough for this.
-
-[server name] = name of remote server
-
-[server version] = version of remote server (usually relaychat-1.1)
-
-[welcome message] = welcome message, usually "Welcome to the Relay Chat Network!"
+good enough for this. |
+| [server name] | name of remote server |
+| [server version] | version of remote server (usually relaychat-1.1) |
+| [welcome message] | welcome message, usually "Welcome to the Relay Chat Network!" |
 
 On the reception of a connection, a server will send a response like:
 
