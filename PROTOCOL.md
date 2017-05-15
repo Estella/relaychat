@@ -73,4 +73,7 @@ The server that receives these messages should respond with:
 | KILL | [target] [:message] | Forcibly disconnect a user or notify the rest of the network that a user on your server has disconnected. Global moderator/operator and servers only. | You must send a QUIT message to all local users on reception of this command. If the target user is on your server, send the proper disconnection messages. This varies from server to server. |
 | MESSAGE | [target] [:message] | Send a message to a target, which may be either a user's nickname or a #[channel name]. | `[message id] [user] MESSAGE [target] [:message]` |
 | USERS | #[channel] | List all users in a channel | `[message id] [server] USERS #[channel] :(*)user (*)nextuser` (a '*' is used at the beginning of a nickname to denote a moderator) |
-| PART | #[channel] | Leave a channel | `[message id] [user] PART #[channel]`
+| PART | #[channel] | Leave a channel | `[message id] [user] PART #[channel]` |
+| WHOIS | [user] | Give nickname, local uid, and hostname of remote user | `[message id] [server] ABOUT [user nickname] [user local uid] [user hostname] :[optional informational message: e.g. "is my nickname, local uid, and hostname."]` |
+| MODLOGIN | [name] [password] | Obtain global moderator privileges | GLOBAL message detailing who gained privileges |
+| GLOBAL | [:message] | Send a global message | `[message id] [user or server] GLOBAL [:message]`
