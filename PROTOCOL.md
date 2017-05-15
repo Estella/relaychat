@@ -39,7 +39,7 @@ Messages sent to a server should be in one of these three formats:
 
 Clients should always use the first format.
 While negotiating server-to-server protocol mode, the second form should be used.
-After server-to-server protocol mode is activated, the last form should always be used.
+If server-to-server protocol mode is activated or if you are sending to a client, the last form should be used.
 
 Any other syntax is INVALID and should be met with an ERROR. If it is on a server-to-server
 connection, you should disconnect the server with a PROTOCOL VIOLATION error.
@@ -60,15 +60,17 @@ The server that receives these messages should respond with:
 
 ### Commands
 
-| Command | Parameters | Description |
-|---------|------------|-------------|
-| NICK | [desired nickname] | Set a nickname or server name |
-| SERVER | none | Enable server mode, the receiving server should always respond as documented in **Server to Server Interaction** |
-| BURST | none | Respond with a series of FAKENICK, JOIN, MOD, TOPIC and other relevant commands to get the connecting server up to date on network state |
-| FAKENICK | [uid]* [nick]** [hostname] | Introduce a remote user into the network; Kill any nicknames that collide with another user. *UID is used for internal purposes and is random. **nicknames can be server names too; if it a server you should not KILL it during a nick collision. |
-| JOIN | #[channel] | Join a channel; no ',' (commas) supported for multiple channels. |
-| MOD/DEMOD | #[channel] [user] | Grant or revoke moderator privileges to a user for a channel. |
-| TOPIC | #[channel] [:topic text] | Set the channel topic; only available for moderators. |
-| QUIT | [:message] | Disconnect a user; this is not sent to other servers in practice (KILL is used) but MUST work fine if done so. |
-| KILL | [target] [:message] | Forcibly disconnect a user or notify the rest of the network that a user on your server has disconnected. |
-| MESSAGE | [target] [:message] | Send a message to a target, which may be either a user's nickname or a #[channel name]. |
+| Command | Parameters | Description | Server Response (<nl> means newline) |
+|---------|------------|-------------|--------------------------------------|
+| NICK | [desired nickname] | Set a nickname or server name | `[message id] [old nickname] NICK [new nickname]` |
+| SERVER | none | Enable server mode, the receiving server should always respond as documented in **Server to Server Interaction** | see above |
+| BURST | none | Respond with a series of FAKENICK, JOIN, MOD, TOPIC and other relevant commands to get the connecting server up to date on network state | not applicable |
+| FAKENICK | [uid]* [nick]** [hostname] | Introduce a remote user into the network; Kill any nicknames that collide with another user. *UID is used for internal purposes and is random. **nicknames can be server names too; if it a server you should not KILL it during a nick collision. | fakenick message should be repeated to other servers on the network |
+| JOIN | #[channel] | Join a channel; no ',' (commas) supported for multiple channels. Topic command must be sent to notify client of channel topic; Do not send topic to remote servers. First person to join gets moderator. | `[message id] [user] JOIN #[channel]` |
+| MOD/DEMOD | #[channel] [user] | Grant or revoke moderator privileges to a user for a channel. | `[message id] [user] (DE)MOD #[channel] [other user]` |
+| TOPIC | #[channel] [:topic text] | Set the channel topic; only available for moderators. | `[message id] [user] TOPIC #[channel] [:topic text]` |
+| QUIT | [:message] | Disconnect a user; this is not sent to other servers in practice (KILL is used) but MUST work fine if done so. | `[message id] [user] QUIT [:message]` | 
+| KILL | [target] [:message] | Forcibly disconnect a user or notify the rest of the network that a user on your server has disconnected. Global moderator/operator and servers only. | You must send a QUIT message to all local users on reception of this command. If the target user is on your server, send the proper disconnection messages. This varies from server to server. |
+| MESSAGE | [target] [:message] | Send a message to a target, which may be either a user's nickname or a #[channel name]. | `[message id] [user] MESSAGE [target] [:message]` |
+| USERS | #[channel] | List all users in a channel | `[message id] [server] USERS #[channel] :(*)user (*)nextuser` (a '*' is used at the beginning of a nickname to denote a moderator) |
+| PART | #[channel] | Leave a channel | `[message id] [user] PART #[channel]`
