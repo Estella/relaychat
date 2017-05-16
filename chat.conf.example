@@ -14,7 +14,7 @@ deny=badnick 127.0.0.2 bot123
 filter=
 # Modules
 # list of modules to use; space separated
-modules=ircgateway.tcl
+modules=ircgateway.tcl websocket.tcl
 # Configure the IRC Gateway -- you probably want this
 ircgateway.ports=6667 6668
 # Configure TLS
@@ -24,3 +24,6 @@ tls.cert=chat.crt
 tls.ports=7657
 # IRC Gateway TLS Configuration
 tls.ircgateway.ports=6697
+# Configure WebSockets (sh getwebsocket.sh)
+websocket.ports=7658
+# Done!
