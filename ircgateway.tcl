@@ -80,7 +80,7 @@ proc proxyfromserver {server client host port thenick oldnick} {
 			if { ![string match "*Nickname in use*" [lindex $data 3]] } {
 			puts $client ":$::me NOTICE $thenick :Error: [lindex $data 3]"
 			} else {
-			puts $client ":$::me 433 $thenick * :Nickname in use"
+			puts $client ":$::me 433 $thenick $thenick :Nickname in use"
 			}
 			}
 		}
