@@ -65,6 +65,7 @@ proc uputs {sock text} {
 	after 5000 forcepong
  }
  proc connect {sock host port {isserver 0}} {
+catch {
     fconfigure $sock -blocking 0 -buffering line -translation auto
     fileevent $sock readable [list handleSocket $sock]
     set ::socks($sock) $sock
@@ -93,6 +94,7 @@ proc uputs {sock text} {
    puts $sock "[gettok] $::me INFO :There are [llength [array names ::socks]] users and 0 invisible on [expr [llength [array names ::servers]]+1] servers and I have [llength [array names ::issock]] local users."
 
     sendToAllServer "[gettok] $::me FAKENICK fake$sock[clock clicks] $sock $host"
+}
 }
 
  proc disconnect {sock args} {
