@@ -230,11 +230,13 @@ proc uputs {sock text} {
 			if { [nick2id [lindex $linex 2]] ne 0 && (![string match "*.*" [lindex $linex 2]])} {
 			sendToAllServer "[gettok] $::me KILL $src :Nick collision"
 			}
+			if { [nick2id [lindex $linex 2]] eq 0 } {
 			set ::socks([lindex $linex 1]) [lindex $linex 2]
 			set ::chans([lindex $linex 1]) {}
 			set ::hosts([lindex $linex 1]) [lindex $linex 3]
 			set ::realsocks([lindex $linex 1]) $rsock
 			sendToAllServer "$thetok $src FAKENICK [lindex $linex 1] [lindex $linex 2] [lindex $linex 3]"
+			}
 		}
 		GLOBAL {
 			puts "GLOBALING"
