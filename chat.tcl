@@ -97,7 +97,7 @@ catch {
 }
 }
 
- proc disconnect {sock args} {
+ proc disconnect {sock args {nosend 0}} {
     set nick $::socks($sock)
     sendTextAllFor $sock "[gettok] $nick QUIT :[join $args]"
     catch { puts $sock "[gettok] $::me ERROR :Closing Link: $::hosts($sock): [join $args]" }
@@ -110,7 +110,7 @@ catch {
     if { [info exists ::servers($sock)] } {
 	foreach {k v} [array get ::realsocks] {
 		if { $v eq $sock } {
-			disconnect $k "$nick $::me"
+			disconnect $k "$nick $::me" 1
 		}
 	}
     }
@@ -118,7 +118,9 @@ catch {
     	unset ::issock($sock)
 	fileevent $sock readable {}
     } else {
+	if { $nosend eq 1 } {
     sendToAllServer "[gettok] $::me KILL $nick :[join $args]"
+	}
 	unset ::realsocks($sock)
    }
 	
