@@ -105,6 +105,8 @@ catch {
     unset ::chans($sock)
     unset ::hosts($sock)
     catch { unset ::opers($sock) }
+    if { [info exists ::issock($sock) ] } {
+	close $sock
     if { [info exists ::servers($sock)] } {
 	foreach {k v} [array get ::realsocks] {
 		if { $v eq $sock } {
@@ -112,11 +114,9 @@ catch {
 		}
 	}
     }
-    if { [info exists ::issock($sock) ] } {
 	catch { unset ::servers($sock) }
     	unset ::issock($sock)
 	fileevent $sock readable {}
-	close $sock
     } else {
     sendToAllServer "[gettok] $::me KILL $nick :[join $args]"
 	unset ::realsocks($sock)
