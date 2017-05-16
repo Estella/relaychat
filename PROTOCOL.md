@@ -16,7 +16,7 @@ The standard port is 7654 and for TLS is 7657.
 |---|------------|
 | << | messages from Server |
 | >> | messages from Client |
-| [message id] | unique id of the format #<random number>,<unix timestamp>. The <unix timestamp> must be a real timestamp or clients and/or servers may react unexpectedly. <random number> need not be especially random, in many cases the C clock() function or tcl [clock clicks] function will provide a number good enough for this. |
+| [message id] | unique id of the format #(random number),(unix timestamp). The (unix timestamp) must be a real timestamp or clients and/or servers may react unexpectedly. (random number) need not be especially random, in many cases the C clock() function or tcl [clock clicks] function will provide a number good enough for this. |
 | [server name] | name of remote server |
 | [server version] | version of remote server (usually relaychat-1.1) |
 | [welcome message] | welcome message, usually "Welcome to the Relay Chat Network!" |
@@ -60,7 +60,7 @@ The server that receives these messages should respond with:
 
 ### Commands
 
-| Command | Parameters | Description | Server Response (<nl> means newline) |
+| Command | Parameters | Description | Server Response (~nl~ means newline) |
 |---------|------------|-------------|--------------------------------------|
 | NICK | [desired nickname] | Set a nickname or server name | `[message id] [old nickname] NICK [new nickname]` |
 | SERVER | none | Enable server mode, the receiving server should always respond as documented in **Server to Server Interaction** | see above |
@@ -68,6 +68,7 @@ The server that receives these messages should respond with:
 | FAKENICK | [uid]* [nick]** [hostname] | Introduce a remote user into the network; Kill any nicknames that collide with another user. *UID is used for internal purposes and is random. **nicknames can be server names too; if it a server you should not KILL it during a nick collision. | fakenick message should be repeated to other servers on the network |
 | JOIN | #[channel] | Join a channel; no ',' (commas) supported for multiple channels. Topic command must be sent to notify client of channel topic; Do not send topic to remote servers. First person to join gets moderator. | `[message id] [user] JOIN #[channel]` |
 | MOD/DEMOD | #[channel] [user] | Grant or revoke moderator privileges to a user for a channel. | `[message id] [user] (DE)MOD #[channel] [other user]` |
+| BAN/UNBAN | #[channel] [user] | Ban or unban a user from a channel. [user] may be an IP address, hostname, or nickname. | `[message id] [user] (UN)BAN #[channel] [other user]` |
 | TOPIC | #[channel] [:topic text] | Set the channel topic; only available for moderators. | `[message id] [user] TOPIC #[channel] [:topic text]` |
 | QUIT | [:message] | Disconnect a user; this is not sent to other servers in practice (KILL is used) but MUST work fine if done so. | `[message id] [user] QUIT [:message]` | 
 | KILL | [target] [:message] | Forcibly disconnect a user or notify the rest of the network that a user on your server has disconnected. Global moderator/operator and servers only. | You must send a QUIT message to all local users on reception of this command. If the target user is on your server, send the proper disconnection messages. This varies from server to server. |
@@ -78,3 +79,4 @@ The server that receives these messages should respond with:
 | MODLOGIN | [name] [password] | Obtain global moderator privileges | GLOBAL message detailing who gained privileges |
 | GLOBAL | [:message] | Send a global message | `[message id] [user or server] GLOBAL [:message]` |
 | KICK | #[channel] [target] | Kick a user from a channel. Moderators only. | `[message id] [user] KICK #[channel] [target]` |
+| LIST | none | List all channels on the network. Limit to 250 channels max. | For each channel on network `[message id] [user] LIST #[channel]` |
