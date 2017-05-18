@@ -65,7 +65,11 @@ proc proxyfromserver {server client host port thenick oldnick} {
 			}
 		}
 		MESSAGE {
+			if { [string match "~~ *" [lindex $data 4]] } {
+			puts $client ":[lindex $data 1]![lindex $data 1]@[gethost [lindex $data 1]] NOTICE [lindex $data 3] :[string range [lindex $data 4] 4 end]"
+			} else {
 			puts $client ":[lindex $data 1]![lindex $data 1]@[gethost [lindex $data 1]] PRIVMSG [lindex $data 3] :[lindex $data 4]"
+			}
 		}
 		KICK {
 			puts $client ":[hostmask [lindex $data 1]] KICK [lindex $data 3] [lindex $data 4] :Kicked"
