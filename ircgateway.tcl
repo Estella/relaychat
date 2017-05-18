@@ -85,9 +85,7 @@ proc proxyfromserver {server client host port thenick oldnick} {
 			}
 		}
 		NICK {
-			if { [lindex $data 3] ne $thenick } {
 			puts $client ":[lindex $data 1]![lindex $data 1]@[gethost [lindex $data 3]] NICK :[lindex $data 3]"
-			}
 		}
 		PING {
 			puts $server "PONG"
