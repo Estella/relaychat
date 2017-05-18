@@ -14,9 +14,9 @@ proc proxyfromserver {server client host port thenick oldnick} {
 	set data [parseline $dat]
 	switch -nocase -- [lindex $data 2] {
 		INFO {
-			if { [string match "*relaychat-1.1*" $dat] } {
+			if { [string match "*relaychat-*.*" $dat] } {
 				puts $client ":[lindex $data 1] 001 $thenick :Welcome to the relay chat network"
-				puts $client ":[lindex $data 1] 004 $thenick :I'm running version relaychat-1.1"
+				puts $client ":[lindex $data 1] 004 $thenick :I'm running version relaychat-1.x+protover=1,2,alpha May2017 Release"
 				puts $client ":[lindex $data 1] 005 $thenick PREFIX=(ov)@+ CHANLIMIT=NONE CHANTYPES=# COMPLIANT=FALSE"
 				puts $client ":[lindex $data 1] 375 $thenick :[lindex $data 1] message of the day!"
 				return
@@ -85,13 +85,21 @@ proc proxyfromserver {server client host port thenick oldnick} {
 			}
 		}
 		NICK {
+			if { [lindex $data 3] ne $thenick } {
 			puts $client ":[lindex $data 1]![lindex $data 1]@[gethost [lindex $data 3]] NICK :[lindex $data 3]"
+			}
 		}
 		PING {
 			puts $server "PONG"
 		}
 		MOD {
 			puts $client ":[hostmask [lindex $data 1]] MODE [lindex $data 3] +o [lindex $data 4]"
+		}
+		TRUST {
+			puts $client ":[hostmask [lindex $data 1]] MODE [lindex $data 3] +v [lindex $data 4]"
+		}
+		DETRUST {
+			puts $client ":[hostmask [lindex $data 1]] MODE [lindex $data 3] -v [lindex $data 4]"
 		}
 		SERVERS {
 			puts $client ":$::me 364 $thenick [lindex $data 3] [lindex $data 1] :1 A Remote Server"
@@ -117,9 +125,13 @@ proc proxyfromclient {client server host port {curnick "*"}} {
 	switch -nocase -- [lindex $data 0] {
 		USER {}
 		NICK {
+			if { [nick2id [lindex $data 1]] eq 0 } {
 			puts $server "NICK [lindex $data 1]"
 			puts $server "SETHOST $host"
 			fileevent $server readable [list proxyfromserver $server $client $host $port [lindex $data 1] abc]
+			} else {
+			puts $client ":$::me 433 * [lindex $data 1] :Nickname in use"
+			}
 		}
 		JOIN {
 			foreach c [split [lindex $data 1] ","] {
@@ -155,6 +167,12 @@ proc proxyfromclient {client server host port {curnick "*"}} {
 				}
 				-o {
 					puts $server "DEMOD [lindex $data 1] [lindex $data 3]"
+				}
+				+v {
+					puts $server "TRUST [lindex $data 1] [lindex $data 3]"
+				}
+				-v {
+					puts $server "DETRUST [lindex $data 1] [lindex $data 3]"
 				}
 				+b {
 					if { [lindex $data 3] eq "" } {
@@ -197,6 +215,9 @@ proc proxyfromclient {client server host port {curnick "*"}} {
 		}
 		KILL {
 			puts $server "KILL [lindex $data 1] :[lindex $data 2]"
+		}
+		NAMES {
+			puts $server "USERS [lindex $data 1]"
 		}
 		LINKS {
 			puts $server "SERVERS"

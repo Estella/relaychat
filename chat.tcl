@@ -1,5 +1,5 @@
  # CONFIG HERE
- 
+ proc protover {} { return "1.2a"; }
  set fname "chat.conf"
  if { [lindex $::argv 0] ne "" } {
 	set fname [lindex $::argv 0]
@@ -74,7 +74,7 @@ catch {
     set ::hosts($sock) $host
     set ::lastpong($sock) [clock seconds]
     if { $host in $::conf(deny) } {
-	puts $sock "[gettok] $::me INFO :relaychat-1.1 You're banned from the Relay Chat Network!"
+	puts $sock "[gettok] $::me INFO :relaychat-[protover] You're banned from the Relay Chat Network!"
 	disconnect $sock "You're banned"
 	return
 	}
@@ -83,7 +83,7 @@ catch {
 	puts $sock "[gettok] * SERVER"
 	puts $sock "[gettok] * BURST"
     }
-    puts $sock "[gettok] $::me INFO :relaychat-1.1 Welcome to the Relay Chat Network!"
+    puts $sock "[gettok] $::me INFO :relaychat-[protover] Welcome to the Relay Chat Network!"
     set f [open $::motd]
     while { ![eof $f] } {
 	puts $sock "[gettok] $::me MOTD :[gets $f]"
@@ -203,9 +203,12 @@ catch {
 				puts $rsock "[gettok] $v JOIN $c"
 				}
 			}
-			foreach c [array names ::cmods] {
+			foreach c [array names ::topics] {
 				foreach l $::cmods($c) {
 				puts $rsock "[gettok] $::me MOD $c $::socks($l)"
+				}
+				foreach l $::ctrusts($c) {
+				puts $rsock "[gettok] $::me TRUST $c $::socks($l)"
 				}
 				puts $rsock "[gettok] $::me TOPIC $c :$::topics($c)"
 				puts $rsock "[gettok] $::me FLAGS $c + $::cflags($c)"
@@ -272,6 +275,7 @@ catch {
 				if { ![info exists ::servers($rsock)] } {
 				set ::cmods([string tolower [lindex $linex 1]]) $sock
 				}
+				set ::ctrusts([string tolower [lindex $linex 1]]) {}
 				set ::cbans([string tolower [lindex $linex 1]]) {}
 				set ::cflags([string tolower [lindex $linex 1]]) {}
 			}
@@ -287,7 +291,7 @@ catch {
 			if { [lindex $linex 2] eq "" } {
 			puts $rsock "[gettok] $::me TOPIC [string tolower [lindex $linex 1]] :$::topics([string tolower [lindex $linex 1]])"
 			}
-			if { ($sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]) && [lindex $linex 2] ne "" || "anytopic" in $::cflags([string tolower [lindex $linex 1]])} {
+			if { ($sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]) && [lindex $linex 2] ne "" || "anytopic" in $::cflags([string tolower [lindex $linex 1]]) || $sock in $::ctrusts([string tolower [lindex $linex 1]])} {
 			set ::topics([string tolower [lindex $linex 1]]) [lindex $linex 2]
 			sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src TOPIC [string tolower [lindex $linex 1]] :[lindex $linex 2]"
 			}
@@ -326,7 +330,7 @@ catch {
 			}
 		}
 		PING {
-			puts $rsock "PONG"
+			puts $rsock "[gettok] $::me PONG"
 		}
 		PONG {
 			set ::lastpong($rsock) [clock seconds]
@@ -346,6 +350,25 @@ catch {
 			if { $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]} {
 				sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src DEMOD [string tolower [lindex $linex 1]] [lindex $linex 2]"
 		set ::cmods([string tolower [lindex $linex 1]]) [lsearch -inline -all -not -exact $::cmods([string tolower [lindex $linex 1]]) [nick2id [lindex $linex 2]]]
+			} else {
+				puts $rsock "$thetok $::me ERROR :You don't have permission to do that"
+			}
+		}
+		TRUST {
+			if { [nick2id [lindex $linex 2]] eq 0 } return
+			if { $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)] || [info exists ::opers($sock)]} {
+				sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src TRUST [string tolower [lindex $linex 1]] [lindex $linex 2]"
+		lappend ::ctrusts([string tolower [lindex $linex 1]]) [nick2id [lindex $linex 2]]
+			} else {
+				puts $rsock "$thetok $::me ERROR :You don't have permission to do that"
+			}
+
+		}
+		DETRUST {
+			if { [nick2id [lindex $linex 2]] eq 0 } return
+			if { $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]} {
+				sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src DETRUST [string tolower [lindex $linex 1]] [lindex $linex 2]"
+		set ::ctrusts([string tolower [lindex $linex 1]]) [lsearch -inline -all -not -exact $::ctrusts([string tolower [lindex $linex 1]]) [nick2id [lindex $linex 2]]]
 			} else {
 				puts $rsock "$thetok $::me ERROR :You don't have permission to do that"
 			}
@@ -406,6 +429,7 @@ catch {
     foreach s [array names ::chans] {
         if { [string tolower $chan] in $::chans($s) } {
 	set c ""
+	if { $s in $::ctrusts([string tolower $chan]) } { set c "+" }
 	if { $s in $::cmods([string tolower $chan]) } { set c "*" }
            lappend users $c$::socks($s)
         }
