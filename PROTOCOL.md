@@ -76,7 +76,7 @@ The server that receives these messages should respond with:
 | 0.9+ | MESSAGE | [target] [:message] | Send a message to a target, which may be either a user's nickname or a #[channel name]. | `[message id] [user] MESSAGE [target] [:message]` |
 | 1.1+ | USERS | #[channel] | List all users in a channel | `[message id] [server] USERS #[channel] :(*)user (*)nextuser` (a '*' is used at the beginning of a nickname to denote a moderator) |
 | 1.1+ | PART | #[channel] | Leave a channel | `[message id] [user] PART #[channel]` |
-| 1.0+ | WHOIS | [user] | Give nickname, local uid, and hostname of remote user | `[message id] [server] ABOUT [user nickname] [user local uid] [user hostname] :[optional informational message: e.g. "is my nickname, local uid, and hostname."]` |
+| 1.0+ | WHOIS | [user] | Give nickname, local uid, and hostname of remote user | `[message id] [server] ABOUT [user nickname] [user local uid] [user hostname] :[space-separated list of user's joined channels]` |
 | 1.0+ | MODLOGIN | [name] [password] | Obtain global moderator privileges | GLOBAL message detailing who gained privileges |
 | 0.9+ | GLOBAL | [:message] | Send a global message | `[message id] [user or server] GLOBAL [:message]` |
 | 1.1+ | KICK | #[channel] [target] | Kick a user from a channel. Moderators only. | `[message id] [user] KICK #[channel] [target]` |

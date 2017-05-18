@@ -111,6 +111,7 @@ proc proxyfromserver {server client host port thenick oldnick} {
 		}
 		ABOUT {
 			puts $client ":$::me 311 $thenick [lindex $data 3] [lindex $data 3] [lindex $data 5] * :My local UID is [lindex $data 4]"
+			puts $client ":$::me 319 $thenick [lindex $data 3] :[join [lindex $data 6]]"
 			puts $client ":$::me 318 $thenick [lindex $data 3] :End of /WHOIS reply"
 		}
 		LIST {

@@ -426,7 +426,7 @@ catch {
 		}
 		WHOIS {
 			if { [nick2id [lindex $linex 1]] eq 0 } return
-			puts $rsock "$thetok $::me ABOUT [lindex $linex 1] [nick2id [lindex $linex 1]] $::hosts([nick2id [lindex $linex 1]]) :is my nickname, local uid, and hostname"
+			puts $rsock "$thetok $::me ABOUT [lindex $linex 1] [nick2id [lindex $linex 1]] $::hosts([nick2id [lindex $linex 1]]) :$::chans([nick2id [lindex $linex 1]])"
 		}
 		USERS {
 	set chan [lindex $linex 1]
