@@ -299,6 +299,8 @@ catch {
 		PART {
 			sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src PART [string tolower [lindex $linex 1]]"
 			set ::chans($sock) [lsearch -all -not -exact -inline $::chans($sock) [string tolower [lindex $linex 1]]]
+			set ::cmods([string tolower [lindex $linex 1]]) [lsearch -all -not -exact -inline $::cmods([string tolower [lindex $linex 1]]) $sock]
+			set ::ctrusts([string tolower [lindex $linex 1]]) [lsearch -all -not -exact -inline $::ctrusts([string tolower [lindex $linex 1]]) $sock]
 			if { [cusers [string tolower [lindex $linex 1]]] == 0 } {
 				unset ::topics([string tolower [lindex $linex 1]])
 			}
@@ -308,6 +310,9 @@ catch {
 			if { $sock in $::cmods([string tolower [lindex $linex 1]]) || [info exists ::servers($rsock)]} {
 		sendTextToChan [string tolower [lindex $linex 1]] "$thetok $src KICK [string tolower [lindex $linex 1]] [lindex $linex 2]"
 			set ::chans([nick2id [lindex $linex 2]]) [lsearch -all -not -exact -inline $::chans([nick2id [lindex $linex 2]]) [string tolower [lindex $linex 1]]]
+			set ::cmods([string tolower [lindex $linex 1]]) [lsearch -all -not -exact -inline $::cmods([string tolower [lindex $linex 1]]) [nick2id [lindex $linex 2]]
+			set ::ctrusts([string tolower [lindex $linex 1]]) [lsearch -all -not -exact -inline $::cmods([string tolower [lindex $linex 1]]) [nick2id [lindex $linex 2]]]
+
 			} else {
 				puts $rsock "$thetok $::me ERROR :You don't have permission to do that"
 			}

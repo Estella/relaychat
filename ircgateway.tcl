@@ -211,6 +211,9 @@ proc proxyfromclient {client server host port {curnick "*"}} {
 		PRIVMSG {
 			puts $server "MESSAGE [lindex $data 1] :[lindex $data 2]"
 		}
+		NOTICE {
+			puts $server "MESSAGE [lindex $data 1] :~~ [lindex $data 2]"
+		}
 		KILL {
 			puts $server "KILL [lindex $data 1] :[lindex $data 2]"
 		}
