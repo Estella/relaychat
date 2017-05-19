@@ -62,10 +62,11 @@ proc uputs {sock text} {
 			disconnect $sock {Ping timeout (40 seconds)}
 		} }
 	}
-	after 5000 forcepong
+	set ::usedtoks [lrange $::usedtoks end-10 end]
+	after 10000 forcepong
  }
  proc connect {sock host port {isserver 0}} {
-catch {
+if {[catch {
     fconfigure $sock -blocking 0 -buffering line -translation auto
     fileevent $sock readable [list handleSocket $sock]
     set ::socks($sock) $sock
@@ -94,12 +95,15 @@ catch {
    puts $sock "[gettok] $::me INFO :There are [llength [array names ::socks]] users and 0 invisible on [expr [llength [array names ::servers]]+1] servers and I have [llength [array names ::issock]] local users."
 
     sendToAllServer "[gettok] $::me FAKENICK fake$sock[clock clicks] $sock $host"
+}]} {
+	puts $sock "[gettok] $::me ERROR :I'm sorry, but I can't let you connect -- an internal error occurred that we cannot fix."
+	close $sock
 }
 }
 
  proc disconnect {sock args {nosend 0}} {
     set nick $::socks($sock)
-    sendTextAllFor $sock "[gettok] $nick QUIT :[join $args]"
+    catch { sendTextAllFor $sock "[gettok] $nick QUIT :[join $args]" }
     catch { puts $sock "[gettok] $::me ERROR :Closing Link: $::hosts($sock): [join $args]" }
     unset ::socks($sock)
     unset ::chans($sock)
