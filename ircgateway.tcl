@@ -237,9 +237,9 @@ proc proxyfromclient {client server host port {curnick "*"}} {
 	}
 }
 proc ircproxy {sock host port} {
-	fconfigure $sock -buffering line -translation auto
+	fconfigure $sock -buffering line -translation auto -blocking 0
 	set tgt [socket 127.0.0.1 [lindex $::conf(ports) 0]]
-	fconfigure $tgt -buffering line -translation auto
+	fconfigure $tgt -buffering line -translation auto -blocking 0
 	puts $sock ":$::me NOTICE * :This is a gateway to the relay chat network."
 	fileevent $sock readable [list proxyfromclient $sock $tgt $host $port]
 }
@@ -247,9 +247,11 @@ foreach p $::conf(ircgateway.ports) {
 catch {	socket -server ircproxy $p }
 }
 proc ircproxy_tls {sock host port} {
+	fileevent $sock readable [ircproxy_tls2 $sock $host $port]
+}
+proc ircproxy_tls2 {sock host port} {
 	tls::import $sock -server 1 -keyfile $::conf(tls.key) -certfile $::conf(tls.cert) 
 	tls::handshake $sock
-	puts -nonewline "NOTICE * :Ok\r\n"
 	ircproxy $sock $host $port
 }
 catch {
